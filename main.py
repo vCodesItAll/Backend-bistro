@@ -8,9 +8,10 @@ from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from crud import get_menu_items
+from typing import List
 # from routers import heroes
 
-app = FastAPI()
+app = fastapi.FastAPI()
 
 Base.metadata.create_all(bind=engine)
 def get_db():
@@ -20,7 +21,7 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/api/menu-items")
+@app.get("/api/menu-items", response_model=List[MenuItem])
 def read_menu_items(db: Session = Depends(get_db)):
     menu_items = get_menu_items(db)
     return menu_items
