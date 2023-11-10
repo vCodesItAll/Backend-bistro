@@ -1,3 +1,5 @@
+![Database Table Representation](Screenshot%202023-11-10%20061902.png)
+
 # Restaurant Menu API
 
 ## Basic Requirements
