@@ -1,16 +1,43 @@
 # main.py
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
 from models import Category, Cuisine, MenuItem
+from pydantic import BaseModel
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (you might want to restrict this in a production environment)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Create tables
 Category.__table__.create(bind=engine, checkfirst=True)
 Cuisine.__table__.create(bind=engine, checkfirst=True)
 MenuItem.__table__.create(bind=engine, checkfirst=True)
+
+class CategorySchema(BaseModel):
+    id: int
+    name: str
+
+class CuisineSchema(BaseModel):
+    id: int
+    name: str
+
+class MenuItemSchema(BaseModel):
+    id: int
+    title: str
+    description: str
+    price: float
+    spicy_level: int
+    category: CategorySchema
+    cuisine: CuisineSchema
 
 # Dependency to get the database session
 def get_db():
@@ -127,7 +154,7 @@ def insert_data(db: Session = Depends(get_db)):
          "description": "Layers of pasta, tomato sauce, and assorted vegetables, baked with mozzarella cheese",
          "price": 16.99, "spicy_level": 0},
         {"id": 58, "title": "French Toast", "cuisine_type": "American", "category": "Breakfast",
-         "description": "Thick slices of bread soaked in a mixture of",  # Note: Incomplete description in provided data
+         "description": "Thick slices of bread soaked in a mixture of egg yolk",  
          "price": 11.99, "spicy_level": 0},
     ]
 
@@ -158,3 +185,26 @@ def insert_data(db: Session = Depends(get_db)):
 
     db.commit()
     return {"message": "Data inserted successfully!"}
+
+@app.get("/menus")
+def get_menus(db: Session = Depends(get_db)):
+    result = db.query(MenuItem, Category, Cuisine).join(Category, MenuItem.category_id == Category.id).join(Cuisine, MenuItem.cuisine_id == Cuisine.id).all()
+    pydantic_result = []
+
+    for menu_item, category, cuisine in result:
+        category_schema = CategorySchema(id=category.id, name=category.name)
+        cuisine_schema = CuisineSchema(id=cuisine.id, name=cuisine.name)
+
+        menu_item_schema = MenuItemSchema(
+            id=menu_item.id,
+            title=menu_item.title,
+            description=menu_item.description,
+            price=menu_item.price,
+            spicy_level=menu_item.spicy_level,
+            category=category_schema,
+            cuisine=cuisine_schema
+        )
+
+        pydantic_result.append(menu_item_schema)
+
+    return pydantic_result
