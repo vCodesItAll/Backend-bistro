@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from database import engine, SessionLocal
 from models import Category, Cuisine, MenuItem
 from pydantic import BaseModel
+from schemas import CategorySchema, CuisineSchema, MenuItemSchema
 
 
 app = FastAPI()
@@ -22,22 +23,6 @@ Category.__table__.create(bind=engine, checkfirst=True)
 Cuisine.__table__.create(bind=engine, checkfirst=True)
 MenuItem.__table__.create(bind=engine, checkfirst=True)
 
-class CategorySchema(BaseModel):
-    id: int
-    name: str
-
-class CuisineSchema(BaseModel):
-    id: int
-    name: str
-
-class MenuItemSchema(BaseModel):
-    id: int
-    title: str
-    description: str
-    price: float
-    spicy_level: int
-    category: CategorySchema
-    cuisine: CuisineSchema
 
 # Dependency to get the database session
 def get_db():
