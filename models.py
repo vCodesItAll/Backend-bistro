@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import Column, ForeignKey, Integer, String, Float
 
@@ -29,4 +28,7 @@ class MenuItem(Base):
 
     category = relationship("Category", back_populates="menu_items")
     cuisine = relationship("Cuisine", back_populates="menu_items")
+
+Category.menu_items = relationship("MenuItem", back_populates="category")
+Cuisine.menu_items = relationship("MenuItem", back_populates="cuisine")
 
